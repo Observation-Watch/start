@@ -64,7 +64,7 @@ function draw() {
     ctx.font = "48px Arial";
     ctx.fillStyle = "#fff";
     ctx.textAlign = "center";
-    ctx.fillText("Surveillance Horror Game", 400, 150);
+    ctx.fillText("Observation Watch", 400, 150);
 
     buttons.start.forEach(drawButton);
 
