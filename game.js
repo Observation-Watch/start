@@ -23,6 +23,11 @@ const buttons = {
 
 let draggingSlider = null;
 
+// --- LOADING STATE ---
+let loading = false;
+let loadingStart = 0;
+let loadingDuration = 0;
+
 function drawButton(btn) {
   ctx.fillStyle = "#222";
   ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
@@ -42,7 +47,20 @@ function draw() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
 
-  if (screen === "start") {
+  if (loading) {
+    drawLoadingAnimation();
+    // Check if loading is done
+    if (performance.now() - loadingStart > loadingDuration) {
+      // Switch to start.js with mosaic animation
+      const oldScript = document.getElementById('menuScript');
+      if (oldScript) oldScript.remove();
+      const newScript = document.createElement('script');
+      newScript.src = 'start.js';
+      newScript.id = 'gameScript';
+      document.body.appendChild(newScript);
+      return; // Stop this draw loop
+    }
+  } else if (screen === "start") {
     ctx.font = "48px Arial";
     ctx.fillStyle = "#fff";
     ctx.textAlign = "center";
@@ -83,6 +101,39 @@ function draw() {
   requestAnimationFrame(draw);
 }
 
+// --- Loading Animation (Spinner) ---
+function drawLoadingAnimation() {
+  ctx.save();
+  ctx.globalAlpha = 0.9;
+  ctx.fillStyle = "#111";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
+
+  // Spinner
+  let cx = canvas.width/2, cy = canvas.height/2, r = 40;
+  let now = performance.now();
+  let angle = ((now / 500) % 1) * 2 * Math.PI;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(angle);
+  for (let i = 0; i < 12; i++) {
+    ctx.save();
+    ctx.rotate((i * Math.PI) / 6);
+    ctx.globalAlpha = i / 12;
+    ctx.fillStyle = "#48f";
+    ctx.fillRect(r, -6, 18, 12);
+    ctx.restore();
+  }
+  ctx.restore();
+
+  // Loading text
+  ctx.font = "28px Arial";
+  ctx.fillStyle = "#fff";
+  ctx.textAlign = "center";
+  let dots = ".".repeat(Math.floor(now / 400) % 4);
+  ctx.fillText("Loading" + dots, canvas.width/2, canvas.height/2 + 70);
+}
+
 function drawSlider(x, y, width, value, min, max, type) {
   ctx.strokeStyle = "#fff";
   ctx.lineWidth = 4;
@@ -110,6 +161,8 @@ function drawSlider(x, y, width, value, min, max, type) {
 canvas.addEventListener('mousedown', function(e) {
   const { offsetX, offsetY } = e;
 
+  if (loading) return;
+
   let btns = [];
   if (screen === "start") btns = buttons.start;
   else if (screen === "settings") btns = buttons.settings;
@@ -121,13 +174,10 @@ canvas.addEventListener('mousedown', function(e) {
       offsetY >= btn.y && offsetY <= btn.y + btn.h
     ) {
       if (btn.text === "Play") {
-        // Switch to start.js
-        const oldScript = document.getElementById('menuScript');
-        if (oldScript) oldScript.remove();
-        const newScript = document.createElement('script');
-        newScript.src = 'start.js';
-        newScript.id = 'gameScript';
-        document.body.appendChild(newScript);
+        // Start loading
+        loading = true;
+        loadingStart = performance.now();
+        loadingDuration = 3000 + Math.random() * 2000; // 3-5 seconds
         return;
       }
       screen = btn.screen;
