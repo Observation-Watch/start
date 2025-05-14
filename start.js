@@ -11,6 +11,34 @@ let flipDirection = 1; // 1 = to camera, -1 = to bedroom
 let currentRoom = "Hallway";
 let showActions = false;
 
+// --- MOSAIC ANIMATION ---
+let mosaicAnimating = true;
+const mosaicRows = 8, mosaicCols = 12;
+let mosaicTiles = [];
+let mosaicStartTime = 0;
+let mosaicDuration = 1200; // ms
+
+// Prepare tile reveal times
+function initMosaic() {
+  mosaicTiles = [];
+  let idx = 0;
+  for (let row = 0; row < mosaicRows; row++) {
+    for (let col = 0; col < mosaicCols; col++) {
+      // Staggered reveal, random for more effect
+      let delay = (row + col) * 40 + Math.random() * 80;
+      mosaicTiles.push({
+        row, col,
+        delay,
+        alpha: 0
+      });
+      idx++;
+    }
+  }
+  mosaicStartTime = performance.now();
+  mosaicAnimating = true;
+}
+initMosaic();
+
 // --- BUTTONS ---
 const cameraBtn = { x: canvas.width - 70, y: 30, w: 40, h: 40 };
 const actionBtn = { x: canvas.width/2 - 60, y: 500, w: 120, h: 40 };
@@ -155,11 +183,48 @@ function drawFlip() {
   ctx.restore();
 }
 
+// --- MOSAIC ANIMATION ---
+function drawMosaicReveal() {
+  // Draw the full game screen to an offscreen canvas
+  let offCanvas = document.createElement('canvas');
+  offCanvas.width = canvas.width;
+  offCanvas.height = canvas.height;
+  let offCtx = offCanvas.getContext('2d');
+  drawBedroom.call({ ctx: offCtx }); // draw background
+  // Draw camera button
+  drawCameraButton.call({ ctx: offCtx });
+
+  // Now reveal tiles one by one
+  let tileW = Math.ceil(canvas.width / mosaicCols);
+  let tileH = Math.ceil(canvas.height / mosaicRows);
+  let now = performance.now();
+  let allDone = true;
+  for (let tile of mosaicTiles) {
+    let elapsed = now - mosaicStartTime - tile.delay;
+    if (elapsed > 0) tile.alpha = Math.min(1, elapsed / 200);
+    else tile.alpha = 0;
+    if (tile.alpha < 1) allDone = false;
+    if (tile.alpha > 0) {
+      ctx.save();
+      ctx.globalAlpha = tile.alpha;
+      ctx.drawImage(
+        offCanvas,
+        tile.col * tileW, tile.row * tileH, tileW, tileH,
+        tile.col * tileW, tile.row * tileH, tileW, tileH
+      );
+      ctx.restore();
+    }
+  }
+  if (allDone) mosaicAnimating = false;
+}
+
 // --- MAIN DRAW LOOP ---
 function drawGame() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (flipping) {
+  if (mosaicAnimating) {
+    drawMosaicReveal();
+  } else if (flipping) {
     drawFlip();
     flipProgress += 0.08;
     if (flipProgress >= 1) {
@@ -180,7 +245,7 @@ canvas.addEventListener('mousedown', function(e) {
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left, my = e.clientY - rect.top;
 
-  if (flipping) return;
+  if (mosaicAnimating || flipping) return;
 
   if (!inCamera) {
     // Check camera button
