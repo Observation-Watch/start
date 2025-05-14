@@ -5,11 +5,31 @@
   <title>My 2D Horror Game</title>
   <style>
     body { background: #000; color: #fff; margin: 0; }
+    #fullscreenBtn {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      padding: 10px 18px;
+      background: #222;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 18px;
+      z-index: 10;
+      opacity: 0.85;
+      transition: background 0.2s;
+    }
+    #fullscreenBtn:hover {
+      background: #444;
+      opacity: 1;
+    }
     canvas { display: block; margin: 0 auto; background: #111; }
   </style>
 </head>
 <body>
+  <button id="fullscreenBtn">⛶ Fullscreen</button>
   <canvas id="gameCanvas" width="800" height="600"></canvas>
-  <script src="game.js"></script>
+  <script src="game.js" id="menuScript"></script>
 </body>
 </html>
