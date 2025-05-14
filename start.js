@@ -16,12 +16,10 @@ let mosaicAnimating = true;
 const mosaicRows = 8, mosaicCols = 12;
 let mosaicTiles = [];
 let mosaicStartTime = 0;
-let mosaicDuration = 1200; // ms
 
 // Prepare tile reveal times
 function initMosaic() {
   mosaicTiles = [];
-  let idx = 0;
   for (let row = 0; row < mosaicRows; row++) {
     for (let col = 0; col < mosaicCols; col++) {
       // Staggered reveal, random for more effect
@@ -31,7 +29,6 @@ function initMosaic() {
         delay,
         alpha: 0
       });
-      idx++;
     }
   }
   mosaicStartTime = performance.now();
@@ -190,9 +187,8 @@ function drawMosaicReveal() {
   offCanvas.width = canvas.width;
   offCanvas.height = canvas.height;
   let offCtx = offCanvas.getContext('2d');
-  drawBedroom.call({ ctx: offCtx }); // draw background
-  // Draw camera button
-  drawCameraButton.call({ ctx: offCtx });
+  // Draw the bedroom as the initial screen
+  drawBedroom.call({ ctx: offCtx });
 
   // Now reveal tiles one by one
   let tileW = Math.ceil(canvas.width / mosaicCols);
