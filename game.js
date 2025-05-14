@@ -1,6 +1,7 @@
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const fullscreenBtn = document.getElementById('fullscreenBtn');
+// Shared variables (declare ONCE)
+window.canvas = document.getElementById('gameCanvas');
+window.ctx = canvas.getContext('2d');
+window.fullscreenBtn = document.getElementById('fullscreenBtn');
 
 let screen = "start";
 let brightness = 1;
